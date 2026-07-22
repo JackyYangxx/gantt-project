@@ -15,6 +15,15 @@ async function start() {
 
   await app.register(cors, { origin: true });
   await app.register(fjwt, { secret: JWT_SECRET });
+
+  app.decorate('authenticate', async (req, reply) => {
+    try {
+      await req.jwtVerify();
+    } catch (err) {
+      reply.status(401).send({ error: 'unauthorized' });
+    }
+  });
+
   await app.register(ws);
 
   getDb();
