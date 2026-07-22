@@ -1,6 +1,10 @@
 import { useParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { v4 as uuid } from 'uuid';
 import { api } from '../api';
+import { useAuth } from '../AuthContext';
+import { useYjs } from '../hooks/useYjs';
+import { useAwareness } from '../hooks/useAwareness';
 import TopBar from '../components/TopBar';
 import SidePanel from '../components/SidePanel';
 import GanttChart from '../components/GanttChart';
@@ -8,20 +12,32 @@ import TaskDrawer from '../components/TaskDrawer';
 
 export default function ProjectPage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [project, setProject] = useState(null);
-  const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sidePanelOpen, setSidePanelOpen] = useState(true);
+
+  const { tasks: tasksMap, connected, updateTask, addTask, deleteTask, provider } = useYjs(id);
+  const { onlineUsers, setLocalState } = useAwareness(provider);
+
+  // Set local awareness state
+  useEffect(() => {
+    if (user) {
+      setLocalState({ username: user.username, color: user.color });
+    }
+  }, [user]);
 
   useEffect(() => {
     api.getProjects().then((data) => {
       setProject(data.projects.find((p) => p.id === id));
     });
-    api.getTasks(id).then((data) => {
-      setTasks(data.tasks);
-    });
+    api.initWS(id);
   }, [id]);
+
+  const tasks = useMemo(() => {
+    return Object.values(tasksMap).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  }, [tasksMap]);
 
   const handleTaskClick = (task) => {
     setSelectedTask(task);
@@ -33,24 +49,37 @@ export default function ProjectPage() {
     setDrawerOpen(true);
   };
 
-  const handleTaskSave = async (taskData) => {
+  const handleTaskSave = (taskData) => {
     if (selectedTask) {
-      await api.updateTask(selectedTask.id, taskData);
+      updateTask(selectedTask.id, taskData);
     } else {
-      await api.createTask(id, taskData);
+      addTask({
+        id: uuid(),
+        project_id: id,
+        name: taskData.name,
+        start: taskData.start,
+        end: taskData.end,
+        progress: taskData.progress,
+        dependencies: taskData.dependencies,
+        parent_id: null,
+        sort_order: tasks.length,
+        color: taskData.color,
+        assigned_to: null,
+        created_by: user.id,
+      });
     }
-    const data = await api.getTasks(id);
-    setTasks(data.tasks);
     setDrawerOpen(false);
   };
 
-  const handleTaskDelete = async () => {
-    if (!selectedTask || !confirm('Delete this task?')) return;
-    await api.deleteTask(selectedTask.id);
-    const data = await api.getTasks(id);
-    setTasks(data.tasks);
+  const handleTaskDelete = () => {
+    if (!selectedTask) return;
+    deleteTask(selectedTask.id);
     setDrawerOpen(false);
     setSelectedTask(null);
+  };
+
+  const handleDateChange = (task, start, end) => {
+    updateTask(task.id, { start, end });
   };
 
   if (!project) return <div style={{ padding: 40 }}>Loading...</div>;
@@ -61,6 +90,8 @@ export default function ProjectPage() {
         project={project}
         sidePanelOpen={sidePanelOpen}
         onToggleSidePanel={() => setSidePanelOpen(!sidePanelOpen)}
+        onlineUsers={onlineUsers}
+        connected={connected}
       />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {sidePanelOpen && (
@@ -74,9 +105,7 @@ export default function ProjectPage() {
           <GanttChart
             tasks={tasks}
             onTaskClick={handleTaskClick}
-            onDateChange={async (task, start, end) => {
-              await api.updateTask(task.id, { start, end });
-            }}
+            onDateChange={handleDateChange}
           />
         </div>
       </div>

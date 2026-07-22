@@ -5,12 +5,18 @@ import 'frappe-gantt/dist/frappe-gantt.css';
 export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
   const containerRef = useRef(null);
   const ganttRef = useRef(null);
+  const prevTaskIdsRef = useRef('');
 
   useEffect(() => {
     if (!containerRef.current || tasks.length === 0) return;
 
+    const currentIds = tasks.map((t) => t.id).sort().join(',');
+
     if (ganttRef.current) {
-      ganttRef.current.refresh(tasks);
+      if (currentIds !== prevTaskIdsRef.current) {
+        ganttRef.current.refresh(tasks);
+        prevTaskIdsRef.current = currentIds;
+      }
       return;
     }
 
@@ -20,7 +26,7 @@ export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
       start: t.start,
       end: t.end,
       progress: t.progress,
-      dependencies: t.dependencies?.join(', ') || '',
+      dependencies: (t.dependencies || []).join(', '),
     }));
 
     ganttRef.current = new Gantt(containerRef.current, ganttTasks, {
@@ -31,27 +37,18 @@ export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
       padding: 18,
       date_format: 'YYYY-MM-DD',
       language: 'en',
-      on_click: (task) => {
-        onTaskClick(task);
-      },
-      on_date_change: (task, start, end) => {
-        onDateChange(task, start, end);
-      },
+      readonly: false,
+      on_click: (task) => onTaskClick(task),
+      on_date_change: (task, start, end) => onDateChange(task, start, end),
       custom_popup_html: (task) => {
-        return `
-          <div style="padding:8px">
-            <strong>${task.name}</strong><br/>
-            ${task.start} → ${task.end}<br/>
-            Progress: ${task.progress}%
-          </div>
-        `;
+        return `<div style="padding:8px"><strong>${task.name}</strong><br/>${task.start} → ${task.end}<br/>Progress: ${task.progress}%</div>`;
       },
     });
 
+    prevTaskIdsRef.current = currentIds;
+
     return () => {
-      if (ganttRef.current) {
-        ganttRef.current = null;
-      }
+      ganttRef.current = null;
     };
   }, [tasks]);
 
