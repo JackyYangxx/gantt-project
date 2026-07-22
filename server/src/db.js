@@ -4,19 +4,30 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, '..', 'data', 'gantt.db');
 
 let db;
 
 export function getDb() {
   if (!db) {
-    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-    db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
+    const dbPath = process.env.DB_PATH || path.join(__dirname, '..', 'data', 'gantt.db');
+    if (dbPath !== ':memory:') {
+      fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+    }
+    db = new Database(dbPath);
+    if (dbPath !== ':memory:') {
+      db.pragma('journal_mode = WAL');
+    }
     db.pragma('foreign_keys = ON');
     initSchema();
   }
   return db;
+}
+
+export function closeDb() {
+  if (db) {
+    db.close();
+    db = null;
+  }
 }
 
 function initSchema() {

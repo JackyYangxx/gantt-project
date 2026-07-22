@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "fastify": "^4.28.0",
@@ -17,5 +18,8 @@
     "yjs": "^13.6.18",
     "y-websocket": "^2.0.4",
     "lib0": "^0.2.94"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0"
   }
 }
