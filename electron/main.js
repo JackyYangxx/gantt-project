@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage, shell, ipcMain, dialog } = require('electron');
 const path = require('path');
+const { pathToFileURL } = require('url');
 const os = require('os');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -138,7 +139,7 @@ async function startServer() {
         ? path.join(process.resourcesPath, '..', 'client', 'dist')
         : path.join(__dirname, '..', 'client', 'dist');
 
-      const { start } = await import(serverPath);
+      const { start } = await import(pathToFileURL(serverPath).href);
       const result = await start({
         port,
         host: '0.0.0.0',
