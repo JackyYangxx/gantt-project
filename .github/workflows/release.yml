@@ -39,7 +39,7 @@ jobs:
         run: npm run build:client
 
       - name: Package Electron app (Windows x64)
-        run: npx electron-builder --win --x64
+        run: npx electron-builder --win --x64 --publish=never
 
       - name: Upload installer as artifact
         uses: actions/upload-artifact@v4
