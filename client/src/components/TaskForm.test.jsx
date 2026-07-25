@@ -63,4 +63,60 @@ describe('TaskForm', () => {
     const nameInput = container.querySelector('input[required]');
     expect(nameInput).toBeTruthy();
   });
+
+  it('submits progress value when slider is changed', () => {
+    const handleSave = vi.fn();
+    render(React.createElement(TaskForm, { task: null, onSave: handleSave }));
+
+    const slider = document.querySelector('input[type="range"]');
+    fireEvent.change(slider, { target: { value: '75' } });
+
+    const nameInput = document.querySelector('input[required]');
+    fireEvent.change(nameInput, { target: { value: 'Progress Task' } });
+
+    fireEvent.click(screen.getByText('Create Task'));
+
+    expect(handleSave).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'Progress Task',
+      progress: 75,
+    }));
+  });
+
+  it('submits progress update with new value', () => {
+    const handleSave = vi.fn();
+    const task = { id: '1', name: 'Task', start: '2026-07-22', end: '2026-07-25', progress: 50, dependencies: [], color: '#4F46E5' };
+    render(React.createElement(TaskForm, { task, onSave: handleSave }));
+
+    const slider = document.querySelector('input[type="range"]');
+    fireEvent.change(slider, { target: { value: '100' } });
+
+    fireEvent.click(screen.getByText('Update Task'));
+
+    expect(handleSave).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'Task',
+      progress: 100,
+    }));
+  });
+
+  it('submits progress 0 correctly', () => {
+    const handleSave = vi.fn();
+    const task = { id: '1', name: 'Task', start: '2026-07-22', end: '2026-07-25', progress: 0, dependencies: [], color: '#4F46E5' };
+    render(React.createElement(TaskForm, { task, onSave: handleSave }));
+
+    const slider = document.querySelector('input[type="range"]');
+    fireEvent.change(slider, { target: { value: '0' } });
+
+    fireEvent.click(screen.getByText('Update Task'));
+
+    expect(handleSave).toHaveBeenCalledWith(expect.objectContaining({
+      progress: 0,
+    }));
+  });
+
+  it('pre-fills progress from task data', () => {
+    const task = { id: '1', name: 'Task', start: '2026-07-22', end: '2026-07-25', progress: 42, dependencies: [], color: '#4F46E5' };
+    render(React.createElement(TaskForm, { task, onSave: () => {} }));
+    const slider = document.querySelector('input[type="range"]');
+    expect(slider.value).toBe('42');
+  });
 });

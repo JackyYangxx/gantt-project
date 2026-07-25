@@ -1,14 +1,23 @@
 {
   "name": "gantt-project",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
+    "dev:electron": "concurrently -k \"npm run dev:server\" \"wait-on http://localhost:3001 && ELECTRON_DEV=true electron electron/main.js\"",
+    "build:client": "cd client && npm run build",
+    "build:electron": "npm run build:client && npm run rebuild:electron && electron-builder",
+    "rebuild:electron": "@electron/rebuild -m server",
     "install:all": "cd server && npm install && cd ../client && npm install",
     "setup": "npm install && npm run install:all"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "electron": "^33.2.0",
+    "electron-builder": "^26.0.0",
+    "@electron/rebuild": "^3.7.0",
+    "wait-on": "^8.0.0"
   }
 }

@@ -12,7 +12,8 @@ export function useYjs(projectId) {
     const ydoc = new Y.Doc();
     ydocRef.current = ydoc;
 
-    const wsUrl = `ws://${window.location.hostname}:3001/ws`;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
     const provider = new WebsocketProvider(wsUrl, `project-${projectId}`, ydoc);
     providerRef.current = provider;
 
@@ -34,7 +35,7 @@ export function useYjs(projectId) {
       setTasks(result);
     };
 
-    tasksMap.observe(updateHandler);
+    tasksMap.observeDeep(updateHandler);
 
     // Initial sync
     if (tasksMap.size > 0) {

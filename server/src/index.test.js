@@ -521,6 +521,62 @@ describe('API', () => {
         expect(body.task.progress).toBe(75);
       });
 
+      it('updates only progress without changing other fields', async () => {
+        // First create a task to update
+        const createRes = await app.inject({
+          method: 'POST',
+          url: `/api/projects/${taskProjectId}/tasks`,
+          headers: { authorization: `Bearer ${token1}` },
+          payload: { name: 'Progress Test', start: '2026-01-01', end: '2026-01-10', progress: 30 },
+        });
+        const created = JSON.parse(createRes.payload).task;
+        expect(created.progress).toBe(30);
+
+        // Update only progress
+        const updateRes = await app.inject({
+          method: 'PUT',
+          url: `/api/tasks/${created.id}`,
+          headers: { authorization: `Bearer ${token1}` },
+          payload: { progress: 85 },
+        });
+        expect(updateRes.statusCode).toBe(200);
+        const updated = JSON.parse(updateRes.payload);
+        expect(updated.task.progress).toBe(85);
+        // Verify other fields are unchanged
+        expect(updated.task.name).toBe('Progress Test');
+        expect(updated.task.start).toBe('2026-01-01');
+        expect(updated.task.end).toBe('2026-01-10');
+
+        // Clean up
+        await app.inject({
+          method: 'DELETE',
+          url: `/api/tasks/${created.id}`,
+          headers: { authorization: `Bearer ${token1}` },
+        });
+      });
+
+      it('updates progress to 0 (boundary)', async () => {
+        const res = await app.inject({
+          method: 'PUT',
+          url: `/api/tasks/${taskId}`,
+          headers: { authorization: `Bearer ${token1}` },
+          payload: { progress: 0 },
+        });
+        expect(res.statusCode).toBe(200);
+        expect(JSON.parse(res.payload).task.progress).toBe(0);
+      });
+
+      it('updates progress to 100 (completed)', async () => {
+        const res = await app.inject({
+          method: 'PUT',
+          url: `/api/tasks/${taskId}`,
+          headers: { authorization: `Bearer ${token1}` },
+          payload: { progress: 100 },
+        });
+        expect(res.statusCode).toBe(200);
+        expect(JSON.parse(res.payload).task.progress).toBe(100);
+      });
+
       it('updates task dependencies', async () => {
         const res = await app.inject({
           method: 'PUT',

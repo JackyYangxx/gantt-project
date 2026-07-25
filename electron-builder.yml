@@ -1,0 +1,49 @@
+appId: com.ganttproject.app
+productName: Gantt Project
+copyright: Copyright (c) 2025
+
+directories:
+  output: release
+  buildResources: electron
+
+files:
+  - electron/**/*
+  - client/dist/**/*
+  - "!**/node_modules/**/*"
+
+extraResources:
+  - from: server
+    to: server
+    filter:
+      - "src/**/*"
+      - "package.json"
+      - "node_modules/**/*"
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: electron/icon.png
+
+mac:
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  icon: electron/icon.png
+  category: public.app-category.productivity
+
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+  icon: electron/icon.png
+  category: Office
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+
+asar: true
+asarUnpack:
+  - "**/better-sqlite3/**/*"
+  - "**/*.node"

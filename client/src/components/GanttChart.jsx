@@ -5,20 +5,10 @@ import 'frappe-gantt/dist/frappe-gantt.css';
 export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
   const containerRef = useRef(null);
   const ganttRef = useRef(null);
-  const prevTaskIdsRef = useRef('');
+  const prevTasksRef = useRef('');
 
   useEffect(() => {
-    if (!containerRef.current || tasks.length === 0) return;
-
-    const currentIds = tasks.map((t) => t.id).sort().join(',');
-
-    if (ganttRef.current) {
-      if (currentIds !== prevTaskIdsRef.current) {
-        ganttRef.current.refresh(tasks);
-        prevTaskIdsRef.current = currentIds;
-      }
-      return;
-    }
+    if (!containerRef.current) return;
 
     const ganttTasks = tasks.map((t) => ({
       id: t.id,
@@ -28,6 +18,22 @@ export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
       progress: t.progress,
       dependencies: (t.dependencies || []).join(', '),
     }));
+
+    const currentKey = JSON.stringify(ganttTasks);
+
+    if (ganttRef.current) {
+      if (currentKey !== prevTasksRef.current) {
+        if (tasks.length === 0) {
+          containerRef.current.innerHTML = '';
+        } else {
+          ganttRef.current.refresh(tasks);
+        }
+        prevTasksRef.current = currentKey;
+      }
+      return;
+    }
+
+    if (tasks.length === 0) return;
 
     ganttRef.current = new Gantt(containerRef.current, ganttTasks, {
       view_mode: 'Day',
@@ -45,7 +51,7 @@ export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
       },
     });
 
-    prevTaskIdsRef.current = currentIds;
+    prevTasksRef.current = currentKey;
 
     return () => {
       ganttRef.current = null;

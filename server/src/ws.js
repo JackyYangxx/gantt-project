@@ -34,14 +34,29 @@ function debouncedPersist(docName) {
         updated_at = datetime('now')
     `);
 
+    const deleteTask = db.prepare('DELETE FROM tasks WHERE id = ?');
+
     const projectId = docName.replace('project-', '');
 
     const transaction = db.transaction(() => {
+      const existingIds = db.prepare('SELECT id FROM tasks WHERE project_id = ?')
+        .all(projectId)
+        .map(r => r.id);
+      const currentIds = Array.from(tasksMap.keys());
+
+      // Delete tasks removed from Yjs
+      for (const id of existingIds) {
+        if (!currentIds.includes(id)) {
+          deleteTask.run(id);
+        }
+      }
+
       tasksMap.forEach((task, taskId) => {
         const t = task.toJSON ? task.toJSON() : task;
         upsertTask.run(
           taskId, projectId, t.name, t.start, t.end,
-          t.progress || 0, JSON.stringify(t.dependencies || []),
+          t.progress != null ? t.progress : 0,
+          JSON.stringify(t.dependencies || []),
           t.parent_id || null, t.sort_order || 0,
           t.color || null, t.assigned_to || null, t.created_by || null
         );
@@ -54,11 +69,13 @@ function debouncedPersist(docName) {
 }
 
 export async function setupWebSocket(app) {
-  app.get('/ws', { websocket: true }, (socket, req) => {
-    // Extract docName from the URL query parameter
+  app.get('/ws/*', { websocket: true }, (socket, req) => {
+    // y-websocket v2 appends the room name as a path segment: /ws/project-xxx
+    // Extract it from the URL path
     const rawUrl = req.raw ? req.raw.url : (req.url || '/');
     const url = new URL(rawUrl, 'http://localhost');
-    const docName = url.searchParams.get('room') || 'default';
+    const path = url.pathname; // e.g. /ws/project-xxx
+    const docName = path.replace(/^\/ws\//, '') || 'default';
 
     // setupWSConnection expects a raw ws WebSocket and an IncomingMessage-like object.
     // @fastify/websocket provides a ws WebSocket as the `socket` parameter, so we

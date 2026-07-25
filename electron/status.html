@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gantt Project Server</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f8f9fa;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    padding: 32px 20px;
+  }
+  .container { max-width: 440px; width: 100%; }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 24px;
+    color: #1a1a2e;
+  }
+  .status-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 16px;
+  }
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ccc;
+    flex-shrink: 0;
+  }
+  .status-dot.running { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.4); }
+  .status-text { font-size: 15px; font-weight: 500; }
+  .status-text.running { color: #16a34a; }
+
+  .url-display {
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.5px;
+    color: #2563eb;
+    word-break: break-all;
+    margin-bottom: 16px;
+    cursor: pointer;
+    user-select: all;
+  }
+  .url-display:hover { background: #e2e8f0; }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 8px 12px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .info-label { color: #64748b; }
+  .info-value { color: #334155; font-weight: 500; }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary { background: #2563eb; color: #fff; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-secondary { background: #e2e8f0; color: #475569; }
+  .btn-secondary:hover { background: #cbd5e1; }
+  .btn-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .btn-danger:hover { background: #fee2e2; }
+
+  .qr-section {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0 8px;
+  }
+  .qr-section img {
+    width: 180px;
+    height: 180px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: #94a3b8;
+    text-align: center;
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+  .copied-msg {
+    font-size: 12px;
+    color: #16a34a;
+    text-align: center;
+    display: none;
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🚀 Gantt Project Server</h1>
+
+  <div class="status-card">
+    <div class="status-row">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="status-text" id="statusText">Starting...</span>
+    </div>
+
+    <div class="url-display" id="urlDisplay" title="Click to copy">-</div>
+    <div class="copied-msg" id="copiedMsg">✓ Copied to clipboard</div>
+
+    <div class="info-grid">
+      <span class="info-label">LAN IP</span>
+      <span class="info-value" id="ipDisplay">-</span>
+      <span class="info-label">Port</span>
+      <span class="info-value" id="portDisplay">-</span>
+    </div>
+
+    <div class="qr-section">
+      <img id="qrImage" src="" alt="QR Code" style="display:none" />
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="openBtn">Open in Browser</button>
+      <button class="btn btn-danger" id="quitBtn">Quit Server</button>
+    </div>
+  </div>
+
+  <div class="hint">
+    Other users on the same network can open the URL above in their browser.<br>
+    You can close this window; the server will continue running in the system tray.<br>
+    Right-click the tray icon and select "Quit" to stop the server.
+  </div>
+</div>
+
+<script>
+  window.electronAPI.onServerInfo((info) => {
+    document.getElementById('statusDot').className = 'status-dot running';
+    document.getElementById('statusText').textContent = 'Running';
+    document.getElementById('statusText').className = 'status-text running';
+    document.getElementById('urlDisplay').textContent = info.url;
+    document.getElementById('ipDisplay').textContent = info.lanIp;
+    document.getElementById('portDisplay').textContent = String(info.port);
+
+    // QR code
+    const qrImg = document.getElementById('qrImage');
+    if (info.qr) {
+      qrImg.src = info.qr;
+      qrImg.style.display = 'block';
+    }
+  });
+
+  document.getElementById('urlDisplay').addEventListener('click', async () => {
+    const url = document.getElementById('urlDisplay').textContent;
+    try {
+      await navigator.clipboard.writeText(url);
+      const msg = document.getElementById('copiedMsg');
+      msg.style.display = 'block';
+      setTimeout(() => { msg.style.display = 'none'; }, 2000);
+    } catch {}
+  });
+
+  document.getElementById('openBtn').addEventListener('click', () => {
+    const url = document.getElementById('urlDisplay').textContent;
+    if (url && url !== '-') {
+      window.electronAPI.openBrowser(url);
+    }
+  });
+
+  document.getElementById('quitBtn').addEventListener('click', () => {
+    window.electronAPI.quit();
+  });
+</script>
+</body>
+</html>
