@@ -10,6 +10,7 @@ let mainWindow = null;
 let tray = null;
 let isQuitting = false;
 let serverInstance = null;
+let closeDb = null;
 
 // --- Persistent config (JWT secret, stored in userData) ---
 function getConfig() {
@@ -136,11 +137,12 @@ async function startServer() {
         : path.join(__dirname, '..', 'server', 'src', 'index.js');
 
       const staticDir = app.isPackaged
-        ? path.join(process.resourcesPath, '..', 'client', 'dist')
+        ? path.join(process.resourcesPath, 'client', 'dist')
         : path.join(__dirname, '..', 'client', 'dist');
 
-      const { start } = await import(pathToFileURL(serverPath).href);
-      const result = await start({
+      const serverModule = await import(pathToFileURL(serverPath).href);
+      closeDb = serverModule.closeDb;
+      const result = await serverModule.start({
         port,
         host: '0.0.0.0',
         staticDir: fs.existsSync(staticDir) ? staticDir : undefined,
@@ -195,6 +197,9 @@ app.on('before-quit', () => {
   isQuitting = true;
   if (serverInstance) {
     serverInstance.close();
+  }
+  if (typeof closeDb === 'function') {
+    closeDb();
   }
 });
 

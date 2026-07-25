@@ -8,7 +8,6 @@ directories:
 
 files:
   - electron/**/*
-  - client/dist/**/*
   - "!**/node_modules/**/*"
 
 extraResources:
@@ -18,6 +17,8 @@ extraResources:
       - "src/**/*"
       - "package.json"
       - "node_modules/**/*"
+  - from: client/dist
+    to: client/dist
 
 win:
   target:

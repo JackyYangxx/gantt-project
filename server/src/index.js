@@ -5,7 +5,7 @@ import ws from '@fastify/websocket';
 import fastifyStatic from '@fastify/static';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getDb } from './db.js';
+import { getDb, closeDb } from './db.js';
 import { authRoutes } from './auth.js';
 import { adminRoutes } from './admin.js';
 import { projectRoutes } from './projects.js';
@@ -98,3 +98,5 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     process.exit(1);
   });
 }
+
+export { closeDb };

@@ -77,7 +77,7 @@ jobs:
           body: |
             ## 下载
 
-            - **Windows x64**: `Gantt-Project-${{ steps.notes.outputs.version }}-Setup.exe`
+            - **Windows x64**: `Gantt.Project.Setup.${{ steps.notes.outputs.version }}.exe`
 
             ## 安装说明
 
