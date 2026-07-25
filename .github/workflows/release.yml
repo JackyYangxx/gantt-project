@@ -38,9 +38,6 @@ jobs:
       - name: Build client (Vite)
         run: npm run build:client
 
-      - name: Rebuild native modules for Electron
-        run: npm run rebuild:electron
-
       - name: Package Electron app (Windows x64)
         run: npx electron-builder --win --x64
 
