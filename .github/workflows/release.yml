@@ -30,10 +30,10 @@ jobs:
         run: npm install
 
       - name: Install server dependencies
-        run: cd server && npm install
+        run: npm --prefix server install
 
       - name: Install client dependencies
-        run: cd client && npm install
+        run: npm --prefix client install
 
       - name: Build client (Vite)
         run: npm run build:client

@@ -8,7 +8,9 @@ directories:
 
 files:
   - electron/**/*
-  - "!**/node_modules/**/*"
+  - "!node_modules/**/*"
+  - "!client/**/*"
+  - "!server/**/*"
 
 extraResources:
   - from: server
@@ -16,9 +18,10 @@ extraResources:
     filter:
       - "src/**/*"
       - "package.json"
-      - "node_modules/**/*"
   - from: client/dist
     to: client/dist
+
+afterPack: "./scripts/after-pack.js"
 
 win:
   target:

@@ -6,19 +6,20 @@
   "main": "electron/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "cd server && npm run dev",
-    "dev:client": "cd client && npm run dev",
-    "dev:electron": "concurrently -k \"npm run dev:server\" \"npm run dev:client\" \"wait-on http://localhost:3001/api/health && ELECTRON_DEV=true electron electron/main.js\"",
-    "build:client": "cd client && npm run build",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev:electron": "concurrently -k \"npm run dev:server\" \"npm run dev:client\" \"wait-on http://localhost:3001/api/health && cross-env ELECTRON_DEV=true electron electron/main.js\"",
+    "build:client": "npm --prefix client run build",
     "build:electron": "npm run build:client && electron-builder",
-    "install:all": "cd server && npm install && cd ../client && npm install",
+    "install:all": "npm --prefix server install && npm --prefix client install",
     "setup": "npm install && npm run install:all",
-    "test:e2e": "NODE_PATH=node_modules npx playwright test",
-    "reset-db": "cd server && npm run reset-db"
+    "test:e2e": "cross-env NODE_PATH=node_modules npx playwright test",
+    "reset-db": "npm --prefix server run reset-db"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.0",
     "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "electron": "^33.2.0",
     "electron-builder": "^26.0.0",
     "playwright": "^1.62.0",

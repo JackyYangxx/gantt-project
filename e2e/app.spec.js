@@ -219,12 +219,25 @@ test.describe('Admin Management', () => {
       data: { username: ADMIN.username, password: ADMIN.password },
     }).catch(() => {});
 
-    // Promote to admin directly via DB
-    const { execSync } = await import('node:child_process');
-    execSync(
-      `cd server && node -e "import('better-sqlite3').then(m=>{const d=m.default('./data/gantt.db');d.prepare('UPDATE users SET role=? WHERE username=?').run('admin','${ADMIN.username}');}).catch(e=>console.error(e)||process.exit(1))"`,
-      { stdio: 'pipe', timeout: 10000 }
-    );
+    // Promote to admin via API: login as the first-registered user (who is admin)
+    const loginRes = await request.post('/api/auth/login', {
+      data: { username: USER.username, password: USER.password },
+    });
+    const { token } = await loginRes.json();
+
+    // Find ADMIN's user ID
+    const usersRes = await request.get('/api/a7x9k2m/users', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const { users } = await usersRes.json();
+    const adminUser = users.find((u) => u.username === ADMIN.username);
+
+    if (adminUser) {
+      await request.put(`/api/a7x9k2m/users/${adminUser.id}/role`, {
+        data: { role: 'admin' },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    }
   });
 
   async function adminLogin(page) {
