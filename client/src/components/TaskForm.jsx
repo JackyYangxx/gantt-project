@@ -1,4 +1,14 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+
+function fmtDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function fmtMonth(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
 
 export default function TaskForm({ task, onSave }) {
   const [name, setName] = useState(task?.name || '');
@@ -7,6 +17,16 @@ export default function TaskForm({ task, onSave }) {
   const [progress, setProgress] = useState(task?.progress || 0);
   const [deps, setDeps] = useState(task?.dependencies?.join(', ') || '');
   const [color, setColor] = useState(task?.color || '#4F46E5');
+
+  const rangeLabel = useMemo(() => {
+    const s = fmtDate(start);
+    const e = fmtDate(end);
+    return s === e ? s : `${s} → ${e}`;
+  }, [start, end]);
+
+  const startMonth = useMemo(() => fmtMonth(start), [start]);
+  const endMonth = useMemo(() => fmtMonth(end), [end]);
+  const sameMonth = startMonth === endMonth;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,14 +47,29 @@ export default function TaskForm({ task, onSave }) {
         <label style={labelStyle}>Name</label>
         <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} required />
       </div>
-      <div style={{ display: 'flex', gap: 12 }}>
-        <div style={{ ...fieldStyle, flex: 1 }}>
-          <label style={labelStyle}>Start</label>
-          <input style={inputStyle} type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+      <div style={fieldStyle}>
+        <label style={labelStyle}>Date Range</label>
+        <div style={{
+          display: 'flex', gap: 12, alignItems: 'flex-end',
+        }}>
+          <div style={{ flex: 1 }}>
+            <input style={inputStyle} type="date" value={start}
+              onChange={(e) => setStart(e.target.value)} />
+            <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>{startMonth}</div>
+          </div>
+          <span style={{ paddingBottom: 8, color: '#999' }}>→</span>
+          <div style={{ flex: 1 }}>
+            <input style={inputStyle} type="date" value={end}
+              onChange={(e) => setEnd(e.target.value)} />
+            <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>{endMonth}</div>
+          </div>
         </div>
-        <div style={{ ...fieldStyle, flex: 1 }}>
-          <label style={labelStyle}>End</label>
-          <input style={inputStyle} type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
+        <div style={{
+          marginTop: 6, padding: '6px 10px', background: sameMonth ? '#f0f4ff' : '#fef3e2',
+          borderRadius: 4, fontSize: 13, color: sameMonth ? '#4F46E5' : '#b85c00', textAlign: 'center',
+        }}>
+          {rangeLabel}
+          {!sameMonth && <span style={{ marginLeft: 6 }}>↔ 跨月</span>}
         </div>
       </div>
       <div style={fieldStyle}>

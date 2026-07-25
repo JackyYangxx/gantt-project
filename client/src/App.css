@@ -3,6 +3,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 button { cursor: pointer; }
 input, select { font-size: 14px; }
 
+/* frappe-gantt: make month headers more prominent */
+.gantt .upper-text {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  fill: #1a1a1a !important;
+}
+.gantt .lower-text {
+  font-size: 12px !important;
+  fill: #555 !important;
+}
+
 .login-page { max-width: 400px; margin: 80px auto; padding: 32px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 .login-page h1 { text-align: center; margin-bottom: 24px; font-size: 24px; }
 .login-page .form-group { margin-bottom: 16px; }
