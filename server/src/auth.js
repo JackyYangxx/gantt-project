@@ -22,11 +22,15 @@ export async function authRoutes(app) {
     const passwordHash = await bcrypt.hash(password, 10);
     const color = randomColor();
 
-    db.prepare('INSERT INTO users (id, username, password_hash, color) VALUES (?, ?, ?, ?)').run(id, username, passwordHash, color);
+    // First registered user becomes admin
+    const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
+    const role = userCount.count === 0 ? 'admin' : 'user';
 
-    const token = app.jwt.sign({ id, username });
+    db.prepare('INSERT INTO users (id, username, password_hash, color, role) VALUES (?, ?, ?, ?, ?)').run(id, username, passwordHash, color, role);
 
-    return { token, user: { id, username, color } };
+    const token = app.jwt.sign({ id, username, role });
+
+    return { token, user: { id, username, color, role } };
   });
 
   app.post('/login', async (req, reply) => {
@@ -46,14 +50,14 @@ export async function authRoutes(app) {
       return reply.status(401).send({ error: 'invalid credentials' });
     }
 
-    const token = app.jwt.sign({ id: user.id, username: user.username });
+    const token = app.jwt.sign({ id: user.id, username: user.username, role: user.role });
 
-    return { token, user: { id: user.id, username: user.username, color: user.color } };
+    return { token, user: { id: user.id, username: user.username, color: user.color, role: user.role } };
   });
 
   app.get('/me', { onRequest: [app.authenticate] }, async (req) => {
     const db = getDb();
-    const user = db.prepare('SELECT id, username, color, created_at FROM users WHERE id = ?').get(req.user.id);
+    const user = db.prepare('SELECT id, username, color, role, created_at FROM users WHERE id = ?').get(req.user.id);
     return { user };
   });
 }

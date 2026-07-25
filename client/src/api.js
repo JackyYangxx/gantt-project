@@ -2,7 +2,11 @@ const BASE = '/api';
 
 async function request(path, options = {}) {
   const token = localStorage.getItem('token');
-  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  const headers = { ...options.headers };
+  // Only set Content-Type for requests with a body (POST/PUT), not for GET/DELETE
+  if (options.body) {
+    headers['Content-Type'] = 'application/json';
+  }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -43,4 +47,13 @@ export const api = {
     request(`/tasks/${id}`, { method: 'DELETE' }),
 
   initWS: (projectId) => request(`/ws/init/${projectId}`),
+
+  getUsers: () => request('/a7x9k2m/users'),
+  getAllProjects: () => request('/a7x9k2m/projects'),
+  createUser: (username, password, projectIds) =>
+    request('/a7x9k2m/users', { method: 'POST', body: JSON.stringify({ username, password, project_ids: projectIds }) }),
+  updateUserPassword: (id, password) =>
+    request(`/a7x9k2m/users/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
+  updateUserRole: (id, role) =>
+    request(`/a7x9k2m/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
 };

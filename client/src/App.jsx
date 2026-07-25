@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import LoginPage from './pages/LoginPage';
 import ProjectListPage from './pages/ProjectListPage';
 import ProjectPage from './pages/ProjectPage';
+import AdminPage from './pages/AdminPage';
 
 export default function App() {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<ProjectListPage />} />
       <Route path="/project/:id" element={<ProjectPage />} />
+      <Route path="/a7x9k2m" element={<AdminPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

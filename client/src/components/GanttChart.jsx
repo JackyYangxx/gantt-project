@@ -51,7 +51,51 @@ export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
       },
     });
 
+    // --- Drag-to-pan (no scrollbar needed) ---
+    const scrollEl = el.querySelector('.gantt-container');
+    const cleanups = [];
+    if (scrollEl) {
+      const state = { isDown: false, startX: 0, scrollLeft: 0 };
+
+      const onDown = (e) => {
+        if (e.button !== 0) return;
+        // Don't intercept clicks on task bars, handles, or popups
+        if (e.target.closest('.bar-wrapper, .popup-wrapper, .handle')) return;
+        state.isDown = true;
+        state.startX = e.clientX;
+        state.scrollLeft = scrollEl.scrollLeft;
+        scrollEl.style.cursor = 'grabbing';
+        scrollEl.style.userSelect = 'none';
+      };
+      const onMove = (e) => {
+        if (!state.isDown) return;
+        e.preventDefault();
+        scrollEl.scrollLeft = state.scrollLeft - (e.clientX - state.startX);
+      };
+      const onUp = () => {
+        state.isDown = false;
+        scrollEl.style.cursor = 'grab';
+        scrollEl.style.userSelect = '';
+      };
+
+      scrollEl.addEventListener('mousedown', onDown);
+      scrollEl.addEventListener('mousemove', onMove);
+      scrollEl.addEventListener('mouseup', onUp);
+      scrollEl.addEventListener('mouseleave', onUp);
+      scrollEl.style.cursor = 'grab';
+
+      cleanups.push(() => {
+        scrollEl.removeEventListener('mousedown', onDown);
+        scrollEl.removeEventListener('mousemove', onMove);
+        scrollEl.removeEventListener('mouseup', onUp);
+        scrollEl.removeEventListener('mouseleave', onUp);
+        scrollEl.style.cursor = '';
+        scrollEl.style.userSelect = '';
+      });
+    }
+
     return () => {
+      cleanups.forEach((fn) => fn());
       ganttRef.current = null;
     };
   }, [tasks, viewMode]);

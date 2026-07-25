@@ -37,6 +37,7 @@ function initSchema() {
       username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       color TEXT NOT NULL,
+      role TEXT DEFAULT 'user',
       created_at TEXT DEFAULT (datetime('now'))
     );
 
@@ -69,6 +70,7 @@ function initSchema() {
       color TEXT,
       assigned_to TEXT,
       created_by TEXT,
+      progress_notes TEXT DEFAULT '',
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now')),
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
@@ -77,6 +79,10 @@ function initSchema() {
       FOREIGN KEY (created_by) REFERENCES users(id)
     );
   `);
+
+  // Migrate: add columns for existing databases
+  try { db.exec(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'`); } catch {}
+  try { db.exec(`ALTER TABLE tasks ADD COLUMN progress_notes TEXT DEFAULT ''`); } catch {}
 }
 
 const COLORS = ['#4F46E5', '#059669', '#D97706', '#DC2626', '#7C3AED', '#0891B2', '#BE185D', '#1D4ED8'];

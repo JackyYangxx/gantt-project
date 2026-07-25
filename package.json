@@ -11,13 +11,17 @@
     "build:electron": "npm run build:client && npm run rebuild:electron && electron-builder",
     "rebuild:electron": "@electron/rebuild -m server",
     "install:all": "cd server && npm install && cd ../client && npm install",
-    "setup": "npm install && npm run install:all"
+    "setup": "npm install && npm run install:all",
+    "test:e2e": "NODE_PATH=node_modules npx playwright test",
+    "reset-db": "cd server && npm run reset-db"
   },
   "devDependencies": {
+    "@electron/rebuild": "^3.7.0",
+    "@playwright/test": "^1.62.0",
     "concurrently": "^8.2.2",
     "electron": "^33.2.0",
     "electron-builder": "^26.0.0",
-    "@electron/rebuild": "^3.7.0",
+    "playwright": "^1.62.0",
     "wait-on": "^8.0.0"
   }
 }

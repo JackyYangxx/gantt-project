@@ -17,6 +17,7 @@ export default function TaskForm({ task, onSave }) {
   const [progress, setProgress] = useState(task?.progress || 0);
   const [deps, setDeps] = useState(task?.dependencies?.join(', ') || '');
   const [color, setColor] = useState(task?.color || '#4F46E5');
+  const [notes, setNotes] = useState(task?.progress_notes || '');
 
   const rangeLabel = useMemo(() => {
     const s = fmtDate(start);
@@ -33,7 +34,7 @@ export default function TaskForm({ task, onSave }) {
     onSave({
       name, start, end, progress: Number(progress),
       dependencies: deps ? deps.split(',').map((s) => s.trim()).filter(Boolean) : [],
-      color,
+      color, progress_notes: notes,
     });
   };
 
@@ -86,6 +87,12 @@ export default function TaskForm({ task, onSave }) {
         <label style={labelStyle}>Color</label>
         <input type="color" value={color} onChange={(e) => setColor(e.target.value)}
           style={{ width: 40, height: 30, border: 'none', cursor: 'pointer' }} />
+      </div>
+      <div style={fieldStyle}>
+        <label style={labelStyle}>Progress Notes</label>
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
+          placeholder="Enter progress details, blockers, or comments..."
+          style={{ ...inputStyle, minHeight: 80, resize: 'vertical', fontFamily: 'inherit' }} />
       </div>
       <button type="submit"
         style={{ width: '100%', padding: '8px', background: '#4F46E5', color: '#fff', border: 'none', borderRadius: 4, marginTop: 8 }}>

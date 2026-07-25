@@ -8,7 +8,7 @@ export async function projectRoutes(app) {
       SELECT p.* FROM projects p
       JOIN project_members pm ON pm.project_id = p.id
       WHERE pm.user_id = ?
-      ORDER BY p.created_at DESC
+      ORDER BY p.created_at DESC, p.name DESC
     `).all(req.user.id);
 
     for (const p of projects) {
@@ -41,7 +41,7 @@ export async function projectRoutes(app) {
     return { project };
   });
 
-  app.get('/:id', { onRequest: [app.authenticate] }, async (req, reply) => {
+  app.get('/:id', { onRequest: [app.authenticate, app.requireMember] }, async (req, reply) => {
     const db = getDb();
     const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
     if (!project) {
@@ -58,7 +58,7 @@ export async function projectRoutes(app) {
     return { project };
   });
 
-  app.put('/:id', { onRequest: [app.authenticate] }, async (req, reply) => {
+  app.put('/:id', { onRequest: [app.authenticate, app.requireMember] }, async (req, reply) => {
     const { name } = req.body || {};
     if (!name) {
       return reply.status(400).send({ error: 'name is required' });
@@ -84,7 +84,7 @@ export async function projectRoutes(app) {
     return { success: true };
   });
 
-  app.post('/:id/members', { onRequest: [app.authenticate] }, async (req, reply) => {
+  app.post('/:id/members', { onRequest: [app.authenticate, app.requireMember] }, async (req, reply) => {
     const { username } = req.body || {};
     if (!username) {
       return reply.status(400).send({ error: 'username is required' });

@@ -14,6 +14,21 @@ input, select { font-size: 14px; }
   fill: #555 !important;
 }
 
+/* Hide scrollbar for drag-to-pan gantt container */
+.gantt-container {
+  overflow: auto !important;
+  scrollbar-width: none !important;  /* Firefox */
+  -ms-overflow-style: none !important;  /* IE/Edge */
+}
+.gantt-container::-webkit-scrollbar {
+  display: none !important;  /* Chrome/Safari */
+}
+
+/* Gantt chart: flat white background, no alternating rows or grid lines */
+.gantt .grid-row { fill: #fff !important; }
+.gantt .grid-row:nth-child(even) { fill: #fff !important; }
+.gantt .row-line { stroke: none !important; }
+
 .login-page { max-width: 400px; margin: 80px auto; padding: 32px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 .login-page h1 { text-align: center; margin-bottom: 24px; font-size: 24px; }
 .login-page .form-group { margin-bottom: 16px; }

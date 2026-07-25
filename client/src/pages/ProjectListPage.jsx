@@ -9,8 +9,8 @@ export default function ProjectListPage() {
   const [projects, setProjects] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
-  const [inviteOpen, setInviteOpen] = useState(null);
-  const [inviteUser, setInviteUser] = useState('');
+  const [renameOpen, setRenameOpen] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const loadProjects = useCallback(async () => {
     const data = await api.getProjects();
@@ -29,15 +29,20 @@ export default function ProjectListPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this project?')) return;
-    await api.deleteProject(id);
-    loadProjects();
+    try {
+      await api.deleteProject(id);
+      await loadProjects();
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
-  const handleInvite = async (projectId) => {
+  const handleRename = async (projectId) => {
+    if (!renameValue.trim()) return;
     try {
-      await api.inviteMember(projectId, inviteUser);
-      setInviteUser('');
-      setInviteOpen(null);
+      await api.updateProject(projectId, renameValue.trim());
+      setRenameOpen(null);
+      setRenameValue('');
       loadProjects();
     } catch (err) {
       alert(err.message);
@@ -50,6 +55,9 @@ export default function ProjectListPage() {
         <h1>My Projects</h1>
         <div>
           <span style={{ marginRight: 16, color: '#666' }}>Logged in as <strong>{user.username}</strong></span>
+          {user.role === 'admin' && (
+            <button onClick={() => navigate('/a7x9k2m')} style={{ padding: '4px 12px', marginRight: 8 }}>Admin</button>
+          )}
           <button onClick={logout} style={{ padding: '4px 12px' }}>Logout</button>
         </div>
       </div>
@@ -59,7 +67,7 @@ export default function ProjectListPage() {
       </button>
 
       {showCreate && (
-        <form onSubmit={handleCreate} style={{ marginBottom: 16, padding: 16, background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+        <form onSubmit={handleCreate} style={{ marginBottom: 16, padding: 16, background: '#fff', borderRadius: 8 }}>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Project name" required
             style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, marginRight: 8, width: 300 }} />
           <button type="submit" style={{ padding: '8px 16px', background: '#059669', color: '#fff', border: 'none', borderRadius: 4 }}>Create</button>
@@ -70,7 +78,7 @@ export default function ProjectListPage() {
 
       <div style={{ display: 'grid', gap: 12 }}>
         {projects.map((p) => (
-          <div key={p.id} style={{ padding: 16, background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.1)', cursor: 'pointer' }}
+          <div key={p.id} style={{ padding: 16, background: '#fff', borderRadius: 8, cursor: 'pointer' }}
             onClick={() => navigate(`/project/${p.id}`)}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
@@ -80,17 +88,17 @@ export default function ProjectListPage() {
                 </p>
               </div>
               <div style={{ display: 'flex', gap: 4 }} onClick={(e) => e.stopPropagation()}>
-                <button onClick={() => setInviteOpen(inviteOpen === p.id ? null : p.id)}
-                  style={{ padding: '4px 8px', fontSize: 12 }}>+ Invite</button>
+                <button onClick={() => { setRenameOpen(renameOpen === p.id ? null : p.id); setRenameValue(p.name); }}
+                  style={{ padding: '4px 8px', fontSize: 12 }}>Rename</button>
                 <button onClick={() => handleDelete(p.id)}
                   style={{ padding: '4px 8px', fontSize: 12, color: '#DC2626' }}>Delete</button>
               </div>
             </div>
-            {inviteOpen === p.id && (
+            {renameOpen === p.id && (
               <div style={{ marginTop: 8, display: 'flex', gap: 4 }} onClick={(e) => e.stopPropagation()}>
-                <input value={inviteUser} onChange={(e) => setInviteUser(e.target.value)} placeholder="Username"
+                <input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} placeholder="New name"
                   style={{ padding: '4px 8px', border: '1px solid #ddd', borderRadius: 4, flex: 1 }} />
-                <button onClick={() => handleInvite(p.id)} style={{ padding: '4px 12px', background: '#4F46E5', color: '#fff', border: 'none', borderRadius: 4 }}>Invite</button>
+                <button onClick={() => handleRename(p.id)} style={{ padding: '4px 12px', background: '#4F46E5', color: '#fff', border: 'none', borderRadius: 4 }}>Save</button>
               </div>
             )}
           </div>

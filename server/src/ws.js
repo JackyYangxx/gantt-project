@@ -24,11 +24,12 @@ function debouncedPersist(docName) {
     const db = getDb();
 
     const upsertTask = db.prepare(`
-      INSERT INTO tasks (id, project_id, name, start, end, progress, dependencies, parent_id, sort_order, color, assigned_to, created_by, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      INSERT INTO tasks (id, project_id, name, start, end, progress, progress_notes, dependencies, parent_id, sort_order, color, assigned_to, created_by, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name, start = excluded.start, end = excluded.end,
-        progress = excluded.progress, dependencies = excluded.dependencies,
+        progress = excluded.progress, progress_notes = excluded.progress_notes,
+        dependencies = excluded.dependencies,
         parent_id = excluded.parent_id, sort_order = excluded.sort_order,
         color = excluded.color, assigned_to = excluded.assigned_to,
         updated_at = datetime('now')
@@ -56,6 +57,7 @@ function debouncedPersist(docName) {
         upsertTask.run(
           taskId, projectId, t.name, t.start, t.end,
           t.progress != null ? t.progress : 0,
+          t.progress_notes || '',
           JSON.stringify(t.dependencies || []),
           t.parent_id || null, t.sort_order || 0,
           t.color || null, t.assigned_to || null, t.created_by || null
@@ -92,7 +94,7 @@ export async function setupWebSocket(app) {
     }
   });
 
-  app.get('/api/ws/init/:projectId', { onRequest: [app.authenticate] }, async (req, reply) => {
+  app.get('/api/ws/init/:projectId', { onRequest: [app.authenticate, app.requireMember] }, async (req, reply) => {
     const docName = `project-${req.params.projectId}`;
 
     // getYDoc creates a proper WSSharedDoc (with conns and awareness) if one
@@ -115,6 +117,7 @@ export async function setupWebSocket(app) {
           start: t.start,
           end: t.end,
           progress: t.progress,
+          progress_notes: t.progress_notes || '',
           dependencies: JSON.parse(t.dependencies || '[]'),
           parent_id: t.parent_id,
           sort_order: t.sort_order,

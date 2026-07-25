@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid';
 import { getDb } from './db.js';
 
 export async function taskRoutes(app) {
-  app.get('/projects/:projectId/tasks', { onRequest: [app.authenticate] }, async (req) => {
+  app.get('/projects/:projectId/tasks', { onRequest: [app.authenticate, app.requireMember] }, async (req) => {
     const db = getDb();
     const tasks = db.prepare(`
       SELECT * FROM tasks WHERE project_id = ?
@@ -16,8 +16,8 @@ export async function taskRoutes(app) {
     return { tasks };
   });
 
-  app.post('/projects/:projectId/tasks', { onRequest: [app.authenticate] }, async (req, reply) => {
-    const { name, start, end, progress, parent_id, sort_order, color, assigned_to, dependencies } = req.body || {};
+  app.post('/projects/:projectId/tasks', { onRequest: [app.authenticate, app.requireMember] }, async (req, reply) => {
+    const { name, start, end, progress, parent_id, sort_order, color, assigned_to, dependencies, progress_notes } = req.body || {};
     if (!name) {
       return reply.status(400).send({ error: 'name is required' });
     }
@@ -44,8 +44,8 @@ export async function taskRoutes(app) {
     return { task };
   });
 
-  app.put('/tasks/:id', { onRequest: [app.authenticate] }, async (req, reply) => {
-    const fields = ['name', 'start', 'end', 'progress', 'parent_id', 'sort_order', 'color', 'assigned_to', 'dependencies'];
+  app.put('/tasks/:id', { onRequest: [app.authenticate, app.requireMember] }, async (req, reply) => {
+    const fields = ['name', 'start', 'end', 'progress', 'parent_id', 'sort_order', 'color', 'assigned_to', 'dependencies', 'progress_notes'];
     const updates = [];
     const values = [];
 
@@ -80,7 +80,7 @@ export async function taskRoutes(app) {
     return { task };
   });
 
-  app.delete('/tasks/:id', { onRequest: [app.authenticate] }, async (req, reply) => {
+  app.delete('/tasks/:id', { onRequest: [app.authenticate, app.requireMember] }, async (req, reply) => {
     const db = getDb();
     const result = db.prepare('DELETE FROM tasks WHERE id = ?').run(req.params.id);
     if (result.changes === 0) {

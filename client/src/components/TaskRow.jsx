@@ -6,7 +6,7 @@ export default function TaskRow({ task, depth, onClick }) {
       onClick={() => onClick(task)}
       style={{
         display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px',
-        paddingLeft: 12 + depth * 20, borderBottom: '1px solid #f0f0f0',
+        paddingLeft: 12 + depth * 20, background: '#fff',
         cursor: 'pointer', fontSize: 13,
       }}
       onMouseEnter={(e) => e.currentTarget.style.background = '#f9f9f9'}

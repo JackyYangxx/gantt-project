@@ -62,6 +62,7 @@ export function useYjs(projectId) {
                 yTask.set('parent_id', t.parent_id);
                 yTask.set('sort_order', t.sort_order);
                 yTask.set('color', t.color);
+                yTask.set('progress_notes', t.progress_notes || '');
                 yTask.set('assigned_to', t.assigned_to);
                 yTask.set('created_by', t.created_by);
                 tasksMap.set(t.id, yTask);
