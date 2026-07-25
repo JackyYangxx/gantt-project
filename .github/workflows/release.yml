@@ -1,0 +1,93 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: false
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    name: Build Windows x64
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm install
+
+      - name: Install server dependencies
+        run: cd server && npm install
+
+      - name: Install client dependencies
+        run: cd client && npm install
+
+      - name: Build client (Vite)
+        run: npm run build:client
+
+      - name: Rebuild native modules for Electron
+        run: npm run rebuild:electron
+
+      - name: Package Electron app (Windows x64)
+        run: npx electron-builder --win --x64
+
+      - name: Upload installer as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Gantt-Project-Windows-x64
+          path: release/*.exe
+          if-no-files-found: error
+
+  create-release:
+    name: Create GitHub Release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build-windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Gantt-Project-Windows-x64
+          path: release
+
+      - name: Generate release notes
+        id: notes
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Gantt Project ${{ steps.notes.outputs.version }}
+          body: |
+            ## 下载
+
+            - **Windows x64**: `Gantt-Project-${{ steps.notes.outputs.version }}-Setup.exe`
+
+            ## 安装说明
+
+            ### Windows
+            1. 下载 `.exe` 安装文件
+            2. 双击运行，按照安装向导完成安装
+            3. 安装后可在开始菜单找到 "Gantt Project"
+          draft: true
+          prerelease: false
+          files: release/*

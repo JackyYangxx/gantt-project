@@ -6,7 +6,7 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
-    "dev:electron": "concurrently -k \"npm run dev:server\" \"wait-on http://localhost:3001 && ELECTRON_DEV=true electron electron/main.js\"",
+    "dev:electron": "concurrently -k \"npm run dev:server\" \"npm run dev:client\" \"wait-on http://localhost:3001/api/health && ELECTRON_DEV=true electron electron/main.js\"",
     "build:client": "cd client && npm run build",
     "build:electron": "npm run build:client && npm run rebuild:electron && electron-builder",
     "rebuild:electron": "@electron/rebuild -m server",

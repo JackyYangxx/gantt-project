@@ -167,11 +167,11 @@ async function startServer() {
   app.quit();
 }
 
-// --- Dev mode: connect to already-running server ---
+// --- Dev mode: connect to Vite dev server ---
 async function startDev() {
   const lanIp = getLanIp();
-  const port = parseInt(process.env.PORT || '3001');
-  // Wait briefly for dev server to be ready
+  // Dev mode: Vite serves the SPA on 5173, server provides API on 3001
+  const port = 5173;
   const serverInfo = { lanIp, port, url: `http://${lanIp}:${port}` };
   createWindow(serverInfo);
   createTray(serverInfo);
