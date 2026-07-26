@@ -13,11 +13,10 @@ files:
   - "!server/**/*"
 
 extraResources:
-  - from: server
+  - from: server/dist
     to: server
     filter:
-      - "src/**/*"
-      - "package.json"
+      - "server.mjs"
   - from: client/dist
     to: client/dist
 

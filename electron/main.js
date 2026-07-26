@@ -133,7 +133,7 @@ async function startServer() {
   for (let port = 3001; port < 3011; port++) {
     try {
       const serverPath = app.isPackaged
-        ? path.join(process.resourcesPath, 'server', 'src', 'index.js')
+        ? path.join(process.resourcesPath, 'server', 'server.mjs')
         : path.join(__dirname, '..', 'server', 'src', 'index.js');
 
       const staticDir = app.isPackaged
