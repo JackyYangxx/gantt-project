@@ -88,6 +88,6 @@ jobs:
             1. 下载 `.exe` 安装文件
             2. 双击运行，按照安装向导完成安装
             3. 安装后可在开始菜单找到 "Gantt Project"
-          draft: true
+          draft: false
           prerelease: false
           files: release/*
