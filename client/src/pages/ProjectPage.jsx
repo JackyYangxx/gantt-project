@@ -182,6 +182,7 @@ export default function ProjectPage() {
           onSave={handleTaskSave}
           onDelete={handleTaskDelete}
           onClose={() => setDrawerOpen(false)}
+          allTasks={tasks}
         />
       )}
     </div>

@@ -21,10 +21,14 @@ export default function ProjectListPage() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    await api.createProject(name);
-    setName('');
-    setShowCreate(false);
-    loadProjects();
+    try {
+      await api.createProject(name);
+      setName('');
+      setShowCreate(false);
+      loadProjects();
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   const handleDelete = async (id) => {

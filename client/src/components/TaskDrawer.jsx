@@ -1,6 +1,6 @@
 import TaskForm from './TaskForm';
 
-export default function TaskDrawer({ task, onSave, onDelete, onClose }) {
+export default function TaskDrawer({ task, onSave, onDelete, onClose, allTasks }) {
   return (
     <div style={{
       position: 'fixed', top: 0, right: 0, bottom: 0, width: 400,
@@ -15,7 +15,7 @@ export default function TaskDrawer({ task, onSave, onDelete, onClose }) {
         <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20 }}>&times;</button>
       </div>
       <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
-        <TaskForm task={task} onSave={onSave} />
+        <TaskForm task={task} onSave={onSave} allTasks={allTasks} />
       </div>
       {task && (
         <div style={{ padding: '12px 16px', borderTop: '1px solid #e5e5e5' }}>

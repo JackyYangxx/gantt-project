@@ -13,6 +13,7 @@ export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
   const containerRef = useRef(null);
   const ganttRef = useRef(null);
   const [viewMode, setViewMode] = useState('Day');
+  const [popup, setPopup] = useState(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -24,6 +25,7 @@ export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
       start: t.start,
       end: t.end,
       progress: t.progress,
+      color: t.color,
       dependencies: (t.dependencies || []).join(', '),
     }));
 
@@ -51,9 +53,44 @@ export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
       },
     });
 
+    // --- Color progress bars ---
+    tasks.forEach((t) => {
+      const wrapper = el.querySelector(`.bar-wrapper[data-id="${t.id}"]`);
+      if (!wrapper) return;
+      const bar = wrapper.querySelector('.bar');
+      if (bar) bar.style.fill = '#e2e8f0';
+      const prog = wrapper.querySelector('.bar-progress');
+      if (!prog) return;
+      if (t.color) prog.style.fill = t.color;
+      else if (t.progress >= 100) prog.style.fill = '#059669';
+      else if (t.progress > 0) prog.style.fill = '#D97706';
+    });
+
+    const cleanups = [];
+
+    // --- Disable built-in popup; show custom popup on task name click ---
+    if (ganttRef.current) ganttRef.current.show_popup = () => {};
+
+    ganttTasks.forEach((t) => {
+      const wrapper = el.querySelector(`.bar-wrapper[data-id="${t.id}"]`);
+      if (!wrapper) return;
+      const text = wrapper.querySelector('text');
+      if (!text) return;
+      text.style.cursor = 'pointer';
+      const handler = (e) => {
+        e.stopPropagation();
+        const r = wrapper.getBoundingClientRect();
+        setPopup({ task: t, x: r.right + 12, y: r.top - 8 });
+      };
+      text.addEventListener('click', handler);
+      cleanups.push(() => {
+        text.removeEventListener('click', handler);
+        text.style.cursor = '';
+      });
+    });
+
     // --- Drag-to-pan (no scrollbar needed) ---
     const scrollEl = el.querySelector('.gantt-container');
-    const cleanups = [];
     if (scrollEl) {
       const state = { isDown: false, startX: 0, scrollLeft: 0 };
 
@@ -96,9 +133,18 @@ export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
 
     return () => {
       cleanups.forEach((fn) => fn());
+      setPopup(null);
       ganttRef.current = null;
     };
   }, [tasks, viewMode]);
+
+  // --- Close popup on click outside ---
+  useEffect(() => {
+    if (!popup) return;
+    const close = () => setPopup(null);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [popup]);
 
   return (
     <div style={{ padding: 16, height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -116,6 +162,26 @@ export default function GanttChart({ tasks, onTaskClick, onDateChange }) {
         ))}
       </div>
       <div ref={containerRef} style={{ flex: 1 }} />
+      <style>{'.gantt .arrow { display: none; }'}</style>
+      {popup && (
+        <div onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed', left: popup.x, top: popup.y, zIndex: 1000,
+            background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8,
+            boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
+            padding: '12px 18px', width: 'auto',
+          }}>
+          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6, whiteSpace: 'nowrap' }}>
+            {popup.task.name}
+          </div>
+          <div style={{ fontSize: 13, color: '#555', whiteSpace: 'nowrap' }}>
+            {fmt(popup.task.start)} → {fmt(popup.task.end)}
+          </div>
+          <div style={{ fontSize: 13, color: '#555', whiteSpace: 'nowrap' }}>
+            Progress: {popup.task.progress}%
+          </div>
+        </div>
+      )}
     </div>
   );
 }

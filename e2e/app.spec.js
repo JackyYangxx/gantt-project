@@ -214,30 +214,18 @@ test.describe('Admin Management', () => {
   };
 
   test.beforeAll(async ({ request }) => {
-    // Register a fresh user
+    // Reset all data so ADMIN is the first registered user → automatically admin
+    await request.post('/api/dev/reset-db').catch(() => {});
+
     await request.post('/api/auth/register', {
       data: { username: ADMIN.username, password: ADMIN.password },
     }).catch(() => {});
 
-    // Promote to admin via API: login as the first-registered user (who is admin)
-    const loginRes = await request.post('/api/auth/login', {
-      data: { username: USER.username, password: USER.password },
+    // Verify registration was successful
+    const verify = await request.post('/api/auth/login', {
+      data: { username: ADMIN.username, password: ADMIN.password },
     });
-    const { token } = await loginRes.json();
-
-    // Find ADMIN's user ID
-    const usersRes = await request.get('/api/a7x9k2m/users', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const { users } = await usersRes.json();
-    const adminUser = users.find((u) => u.username === ADMIN.username);
-
-    if (adminUser) {
-      await request.put(`/api/a7x9k2m/users/${adminUser.id}/role`, {
-        data: { role: 'admin' },
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    }
+    if (!verify.ok()) throw new Error('Failed to register admin test user');
   });
 
   async function adminLogin(page) {
@@ -291,7 +279,7 @@ test.describe('Admin Management', () => {
     await expect(page.getByRole('heading', { name: 'Account Management' })).toBeVisible({ timeout: 5000 });
 
     // Click Change Password on first non-self user row
-    await page.getByRole('button', { name: 'Change Password' }).first().click();
+    await page.getByRole('button', { name: 'Change Password' }).nth(1).click();
 
     // Set new password and save
     await page.getByPlaceholder('New password').fill('newpass456');
@@ -305,18 +293,26 @@ test.describe('Admin Management', () => {
     const loginRes = await request.post('/api/auth/login', {
       data: { username: ADMIN.username, password: ADMIN.password }
     });
-    const { token } = await loginRes.json();
+    const loginData = await loginRes.json();
+    if (!loginRes.ok()) throw new Error(`Admin login failed: ${loginData.error || 'unknown'}`);
+    const { token } = loginData;
 
-    // Create two projects as admin
-    const proj1 = (await (await request.post('/api/projects', {
+    // Create two projects as admin with explicit error checking
+    const p1res = await request.post('/api/projects', {
       data: { name: `Permitted-${Date.now()}` },
       headers: { Authorization: `Bearer ${token}` }
-    })).json()).project;
+    });
+    const p1data = await p1res.json();
+    if (!p1res.ok()) throw new Error(`Project 1 creation failed: ${p1data.error || 'unknown'}`);
+    const proj1 = p1data.project;
 
-    const proj2 = (await (await request.post('/api/projects', {
+    const p2res = await request.post('/api/projects', {
       data: { name: `Restricted-${Date.now()}` },
       headers: { Authorization: `Bearer ${token}` }
-    })).json()).project;
+    });
+    const p2data = await p2res.json();
+    if (!p2res.ok()) throw new Error(`Project 2 creation failed: ${p2data.error || 'unknown'}`);
+    const proj2 = p2data.project;
 
     // Create a user with access to only proj1
     const limitedUser = `limited-${Date.now()}`;

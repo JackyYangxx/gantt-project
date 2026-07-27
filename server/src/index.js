@@ -60,6 +60,20 @@ export async function start(options = {}) {
 
   app.get('/api/health', async () => ({ status: 'ok' }));
 
+  // Dev-only endpoint: reset database (only with default JWT secret)
+  if (!process.env.JWT_SECRET) {
+    app.post('/api/dev/reset-db', async (req, reply) => {
+      const db = getDb();
+      db.exec('PRAGMA foreign_keys = OFF');
+      db.exec('DELETE FROM tasks');
+      db.exec('DELETE FROM projects');
+      db.exec('DELETE FROM project_members');
+      db.exec('DELETE FROM users');
+      db.exec('PRAGMA foreign_keys = ON');
+      return { success: true };
+    });
+  }
+
   await app.register(authRoutes, { prefix: '/api/auth' });
   await app.register(adminRoutes, { prefix: '/api/a7x9k2m' });
   await app.register(projectRoutes, { prefix: '/api/projects' });
