@@ -1,6 +1,6 @@
 {
   "name": "gantt-project",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Collaborative Gantt chart project management tool",
   "private": true,
   "main": "electron/main.js",
