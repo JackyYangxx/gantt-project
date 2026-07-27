@@ -52,7 +52,30 @@ Windows x64 用户可直接下载安装包（从 GitHub Releases 页面获取）
 
 ## 数据迁移
 
+### 开发模式
+
 数据库文件位于 `server/data/gantt.db`，复制该文件即可迁移到其他设备。
+
+### EXE 桌面应用（Windows）
+
+数据库及配置文件存储在以下位置：
+
+```
+%APPDATA%/gantt-project/
+├── config.json          # JWT 密钥（会话令牌）
+└── data/
+    └── gantt.db         # 项目数据
+```
+
+迁移步骤：
+
+1. 在原电脑上关闭 Gantt Project 应用
+2. 复制 `%APPDATA%/gantt-project/` 整个文件夹
+3. 在新电脑上安装并运行一次 Gantt Project（会自动创建目录结构）
+4. 关闭新电脑上的应用，将备份的文件夹覆盖到同路径
+5. 重新打开应用即可
+
+> 如果只迁移 `gantt.db` 而不复制 `config.json`，之前登录的会话令牌会失效，需要重新登录。
 
 ## 技术栈
 
