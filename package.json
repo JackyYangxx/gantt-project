@@ -1,8 +1,11 @@
 {
   "name": "gantt-project",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "private": true,
-  "workspaces": ["server", "client"],
+  "workspaces": [
+    "server",
+    "client"
+  ],
   "main": "electron/main.js",
   "scripts": {
     "dev": "concurrently \"npm -w server run dev\" \"npm -w client run dev\"",
