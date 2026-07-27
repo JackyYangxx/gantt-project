@@ -18,6 +18,7 @@
     "reset-db": "npm --prefix server run reset-db"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.2.0",
     "@playwright/test": "^1.62.0",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
