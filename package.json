@@ -1,21 +1,19 @@
 {
   "name": "gantt-project",
   "version": "1.2.2",
-  "description": "Collaborative Gantt chart project management tool",
   "private": true,
+  "workspaces": ["server", "client"],
   "main": "electron/main.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "npm --prefix server run dev",
-    "dev:client": "npm --prefix client run dev",
-    "dev:electron": "concurrently -k \"npm run dev:server\" \"npm run dev:client\" \"wait-on http://localhost:3001/api/health && cross-env ELECTRON_DEV=true electron electron/main.js\"",
+    "dev": "concurrently \"npm -w server run dev\" \"npm -w client run dev\"",
+    "dev:server": "npm -w server run dev",
+    "dev:client": "npm -w client run dev",
+    "dev:electron": "concurrently -k \"npm -w server run dev\" \"npm -w client run dev\" \"wait-on http://localhost:3001/api/health && cross-env ELECTRON_DEV=true electron electron/main.js\"",
     "build:server": "node server/build.mjs",
-    "build:client": "npm --prefix client run build",
+    "build:client": "npm -w client run build",
     "build:electron": "npm run build:server && npm run build:client && electron-builder",
-    "install:all": "npm --prefix server install && npm --prefix client install",
-    "setup": "npm install && npm run install:all",
     "test:e2e": "cross-env NODE_PATH=node_modules npx playwright test",
-    "reset-db": "npm --prefix server run reset-db"
+    "reset-db": "npm -w server run reset-db"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.2.0",

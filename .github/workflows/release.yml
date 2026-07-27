@@ -26,14 +26,8 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Install root dependencies
+      - name: Install all dependencies (workspaces)
         run: npm install
-
-      - name: Install server dependencies
-        run: npm --prefix server install
-
-      - name: Install client dependencies
-        run: npm --prefix client install
 
       - name: Build server (esbuild bundle)
         run: npm run build:server
@@ -42,7 +36,7 @@ jobs:
         run: npm run build:client
 
       - name: Rebuild native modules for Electron
-        run: npx electron-rebuild -f -w better-sqlite3 --module-dir server
+        run: npx electron-rebuild -f -w better-sqlite3
 
       - name: Package Electron app (Windows x64)
         run: npx electron-builder --win --x64 --publish=never
